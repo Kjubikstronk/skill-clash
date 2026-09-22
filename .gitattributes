@@ -1,0 +1,9 @@
+# Normalize to LF everywhere. The plugin manifests and SKILL.md are parsed by
+# other people's tooling, and a CRLF checkout on Windows should not be able to
+# trip a strict frontmatter or JSON reader.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.webp binary
+*.ico binary

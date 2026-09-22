@@ -31,9 +31,24 @@ export function parseSkill(path: string, source: Source): ParseResult {
   return { ok: true, skill: { name, description, path, source } };
 }
 
-/** Display labels; disambiguates shared names with their source. */
+/**
+ * Display labels, guaranteed unique — they key the maps that `--explain` and
+ * `--deep` look skills up in, so a collision would silently drop a skill.
+ * A shared name is qualified with its source; if that still collides (two
+ * skills of the same name from the same source), a counter is appended.
+ */
 export function labelSkills(skills: Skill[]): Map<Skill, string> {
-  const counts = new Map<string, number>();
-  for (const s of skills) counts.set(s.name, (counts.get(s.name) ?? 0) + 1);
-  return new Map(skills.map((s) => [s, (counts.get(s.name) ?? 0) > 1 ? `${s.name} (${s.source})` : s.name]));
+  const nameCounts = new Map<string, number>();
+  for (const s of skills) nameCounts.set(s.name, (nameCounts.get(s.name) ?? 0) + 1);
+
+  const used = new Set<string>();
+  const out = new Map<Skill, string>();
+  for (const s of skills) {
+    const base = (nameCounts.get(s.name) ?? 0) > 1 ? `${s.name} (${s.source})` : s.name;
+    let label = base;
+    for (let n = 2; used.has(label); n++) label = `${base} #${n}`;
+    used.add(label);
+    out.set(s, label);
+  }
+  return out;
 }

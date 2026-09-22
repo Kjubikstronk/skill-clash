@@ -1,4 +1,4 @@
-import { readdirSync, statSync } from 'node:fs';
+import { readdirSync, realpathSync, statSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { basename, join } from 'node:path';
 import type { Source } from './types.js';
@@ -25,11 +25,33 @@ export function searchRoots(opts: DiscoverOptions = {}): string[] {
 
 export function discover(opts: DiscoverOptions = {}): Discovered[] {
   const [userRoot, projectRoot, pluginRoot] = searchRoots(opts);
+  const found: Discovered[] = [];
+  for (const p of skillFiles(userRoot)) found.push({ path: p, source: 'user' });
+  for (const p of skillFiles(projectRoot)) found.push({ path: p, source: 'project' });
+  if (pluginRoot) found.push(...pluginSkills(pluginRoot));
+
+  // One file must yield one skill. Run from your home directory and
+  // ~/.claude/skills IS ./.claude/skills, so without this every skill is
+  // discovered twice and then reported as clashing with itself at 1.00.
+  // Symlinks are resolved too, so two links to one target collapse as well.
+  // First win: user beats project beats plugin, matching the push order.
+  const seen = new Set<string>();
   const out: Discovered[] = [];
-  for (const p of skillFiles(userRoot)) out.push({ path: p, source: 'user' });
-  for (const p of skillFiles(projectRoot)) out.push({ path: p, source: 'project' });
-  if (pluginRoot) out.push(...pluginSkills(pluginRoot));
+  for (const d of found) {
+    const key = realOrSelf(d.path).toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(d);
+  }
   return out;
+}
+
+function realOrSelf(p: string): string {
+  try {
+    return realpathSync(p);
+  } catch {
+    return p;
+  }
 }
 
 /** `<dir>/<name>/SKILL.md` for every subdirectory that has one. */

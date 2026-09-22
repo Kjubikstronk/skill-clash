@@ -68,3 +68,15 @@ describe('labelSkills', () => {
     expect(labels.get(c)).toBe('commit');
   });
 });
+
+describe('labelSkills uniqueness', () => {
+  const mk2 = (name: string, source: Skill['source'], path: string): Skill => ({ name, description: '', path, source });
+  it('appends a counter when name and source both collide', () => {
+    const a = mk2('huge', 'user', 'a');
+    const b = mk2('huge', 'user', 'b');
+    const labels = labelSkills([a, b]);
+    expect(labels.get(a)).toBe('huge (user)');
+    expect(labels.get(b)).toBe('huge (user) #2');
+    expect(new Set([...labels.values()]).size).toBe(2);
+  });
+});

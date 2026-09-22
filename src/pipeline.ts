@@ -3,8 +3,9 @@ import { parseSkill, labelSkills } from './parse.js';
 import { extractTriggers } from './triggers.js';
 import { findClashes } from './overlap.js';
 import { matchPrompt } from './match.js';
+import { explainPair, resolveSkill } from './explain.js';
 import { deepen, runClaudeCli, type RunClaude } from './deep.js';
-import { renderScan, renderMatch, renderJson, type ScanReport, type MatchReport } from './report.js';
+import { renderScan, renderMatch, renderJson, renderExplain, type ScanReport, type MatchReport } from './report.js';
 import { renderHtml } from './html.js';
 import { DEFAULT_THRESHOLDS, type Skill, type Skipped, type Thresholds, type TriggerSet } from './types.js';
 
@@ -13,6 +14,8 @@ export interface RunOptions {
   cwd?: string;
   plugins?: boolean;
   prompt?: string;
+  /** Two skill names to compare in detail. */
+  explain?: string[];
   deep?: boolean;
   json?: boolean;
   html?: string;
@@ -52,6 +55,30 @@ export async function run(opts: RunOptions, io: RunIO): Promise<number> {
   const byLabel = new Map(skills.map((s) => [labels.get(s) as string, s]));
   const sets: TriggerSet[] = skills.map((s) => extractTriggers(labels.get(s) as string, s.description));
   const warnings: string[] = [];
+
+  if (opts.explain) {
+    const allLabels = [...byLabel.keys()];
+    const picked: string[] = [];
+    for (const q of opts.explain) {
+      const hits = resolveSkill(q, allLabels);
+      if (hits.length === 0) {
+        io.err(`error: no skill matches "${q}"`);
+        return 2;
+      }
+      if (hits.length > 1) {
+        io.err(`error: "${q}" matches ${hits.length} skills: ${hits.join(', ')}`);
+        return 2;
+      }
+      picked.push(hits[0]);
+    }
+    if (picked[0] === picked[1]) {
+      io.err(`error: both names resolve to the same skill (${picked[0]})`);
+      return 2;
+    }
+    const explanation = explainPair(picked[0], picked[1], byLabel, new Map(sets.map((s) => [s.skill, s])), th);
+    io.out(opts.json ? JSON.stringify({ version: 1, ...explanation }, null, 2) : renderExplain(explanation));
+    return 0;
+  }
 
   if (opts.prompt !== undefined) {
     const report: MatchReport = { prompt: opts.prompt, scanned: skills.length, results: matchPrompt(opts.prompt, sets), skipped, warnings };

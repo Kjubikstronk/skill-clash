@@ -1,4 +1,5 @@
 import pc from 'picocolors';
+import type { Explanation } from './explain.js';
 import type { Clash, MatchResult, Skipped } from './types.js';
 
 export interface ScanReport {
@@ -67,4 +68,45 @@ function footer(skipped: Skipped[], warnings: string[], untriggered: string[]): 
   }
   for (const w of warnings) lines.push('', pc.yellow(`warning: ${w}`));
   return lines;
+}
+
+/** `--explain a b`: everything needed to decide which of two skills to keep. */
+export function renderExplain(e: Explanation): string {
+  const band = e.band === 'clash' ? pc.red('CLASH') : e.band === 'ambiguous' ? pc.yellow('AMBIGUOUS') : pc.green('NO OVERLAP');
+  const L: string[] = [
+    `${pc.bold('skill-clash')} - ${pc.bold(e.a.label)} ${pc.dim('<->')} ${pc.bold(e.b.label)}  ${band} ${e.score.toFixed(2)}`,
+    '',
+  ];
+
+  if (e.sharedTriggerWords.length) {
+    L.push(pc.bold('Overlapping on:'), '  ' + e.sharedTriggerWords.map((w) => pc.yellow(w)).join(', '), '');
+  } else {
+    L.push(pc.green('These two share no trigger words.'), '');
+  }
+
+  for (const s of [e.a, e.b]) {
+    L.push(`${pc.bold(s.label)} ${pc.dim(`(${s.source})`)}`);
+    L.push(`  ${pc.dim(s.path)}`);
+    L.push(`  ${wrap(s.description, 74, '  ')}`);
+    if (s.sharedTriggers.length) L.push(`  ${pc.dim('claims:')} ${s.sharedTriggers.map((t) => pc.yellow(`"${t}"`)).join(' . ')}`);
+    if (s.distinctWords.length) L.push(`  ${pc.dim('only it:')} ${pc.cyan(s.distinctWords.slice(0, 12).join(', '))}`);
+    L.push('');
+  }
+
+  L.push(pc.dim('Nothing was changed. To drop one, remove its directory yourself.'));
+  return L.join('\n');
+}
+
+function wrap(text: string, width: number, indent: string): string {
+  const words = text.split(/\s+/);
+  const lines: string[] = [];
+  let line = '';
+  for (const w of words) {
+    if (line.length + w.length + 1 > width) {
+      lines.push(line);
+      line = w;
+    } else line = line ? `${line} ${w}` : w;
+  }
+  if (line) lines.push(line);
+  return lines.join('\n' + indent);
 }

@@ -18,6 +18,7 @@ const program = new Command()
   .description('Find Claude Code skills that fight over the same prompts.')
   .version(version)
   .option('-p, --prompt <text>', 'show which skills compete for this prompt')
+  .option('-e, --explain <skills...>', 'show in detail why two named skills overlap')
   .option('--deep', 'ask your local claude to judge ambiguous pairs', false)
   .option('--json', 'machine-readable output', false)
   .option('--html <file>', 'also write a standalone HTML report')
@@ -32,6 +33,7 @@ const program = new Command()
 
 interface Opts {
   prompt?: string;
+  explain?: string[];
   deep: boolean;
   json: boolean;
   html?: string;
@@ -55,6 +57,10 @@ async function main(): Promise<number> {
     return code.startsWith('commander.help') || code === 'commander.version' ? 0 : 2;
   }
 
+  if (opts.explain !== undefined && opts.explain.length !== 2) {
+    process.stderr.write('error: --explain takes exactly two skill names\n');
+    return 2;
+  }
   if (opts.prompt !== undefined && opts.prompt.trim() === '') {
     process.stderr.write('error: --prompt must not be empty\n');
     return 2;
@@ -75,6 +81,7 @@ async function main(): Promise<number> {
         cwd: opts.cwd,
         plugins: opts.plugins,
         prompt: opts.prompt,
+        explain: opts.explain,
         deep: opts.deep,
         json: opts.json,
         html: opts.html,

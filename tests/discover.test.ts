@@ -60,3 +60,14 @@ describe('discover', () => {
     expect(searchRoots({ home, cwd, plugins: false })).toHaveLength(2);
   });
 });
+
+describe('discover deduplication', () => {
+  // Running from the home directory makes ~/.claude/skills and ./.claude/skills
+  // the same folder; without dedup every skill clashes with itself at 1.00.
+  it('yields one entry per file when home and cwd are the same directory', () => {
+    const found = discover({ home, cwd: home, plugins: false });
+    const paths = found.map((d) => norm(d.path));
+    expect(new Set(paths).size).toBe(paths.length);
+    expect(found.every((d) => d.source === 'user')).toBe(true);
+  });
+});

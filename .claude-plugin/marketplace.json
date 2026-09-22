@@ -1,0 +1,11 @@
+{
+  "name": "skill-clash",
+  "owner": { "name": "Kjubikstronk", "url": "https://github.com/Kjubikstronk" },
+  "plugins": [
+    {
+      "name": "skill-clash",
+      "source": "./plugin",
+      "description": "Find Claude Code skills that fight over the same prompts."
+    }
+  ]
+}

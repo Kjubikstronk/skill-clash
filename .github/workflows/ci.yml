@@ -39,9 +39,23 @@ jobs:
       - name: Smoke test the built binary
         shell: bash
         run: |
+          # This shell runs with `set -e`, so a non-zero exit aborts the step
+          # before it can be inspected. Capture it via `|| code=$?` instead.
+          expect_exit() {
+            local want=$1; shift
+            local code=0
+            "$@" || code=$?
+            if [ "$code" -ne "$want" ]; then
+              echo "expected exit $want from: $* (got $code)" >&2
+              exit 1
+            fi
+          }
+
           node dist/cli.js --version
-          # Exit 1 is expected here: the fixtures contain a real clash.
-          node dist/cli.js --home fixtures/home --cwd fixtures/project || [ $? -eq 1 ]
+          # Fixtures contain ambiguous pairs but no clash-band pair, so 0.
+          expect_exit 0 node dist/cli.js --home fixtures/home --cwd fixtures/project
+          # --strict promotes those ambiguous pairs to a failure.
+          expect_exit 1 node dist/cli.js --home fixtures/home --cwd fixtures/project --strict
           node dist/cli.js --home fixtures/home --cwd fixtures/project --json | node -e "
             let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{
               const r=JSON.parse(s);
@@ -49,8 +63,10 @@ jobs:
               console.log('ok:', r.scanned, 'skills,', r.clashes.length, 'pairs');
             })"
           node dist/cli.js --home fixtures/home --cwd fixtures/project --explain impeccable web-design
-          # A missing skill must be a usage error, not a crash.
-          node dist/cli.js --explain nope alsonope; [ $? -eq 2 ]
+          # Misuse must be a clean usage error, not a crash.
+          expect_exit 2 node dist/cli.js --home fixtures/home --cwd fixtures/project --explain nope alsonope
+          expect_exit 2 node dist/cli.js --explain onlyonename
+          expect_exit 2 node dist/cli.js --clash 7
 
       - name: Verify the published tarball installs and runs
         shell: bash
@@ -60,5 +76,7 @@ jobs:
           npm init -y >/dev/null
           npm install "$GITHUB_WORKSPACE"/skill-clash-*.tgz
           ./node_modules/.bin/skill-clash --version
-          # No skills on a CI box: must exit 0 and say so, not crash.
-          ./node_modules/.bin/skill-clash --home "$RUNNER_TEMP/empty" --cwd "$RUNNER_TEMP/empty"
+          # A machine with no skills at all must exit 0 and say so, not crash.
+          code=0
+          ./node_modules/.bin/skill-clash --home "$RUNNER_TEMP/empty" --cwd "$RUNNER_TEMP/empty" || code=$?
+          [ "$code" -eq 0 ] || { echo "empty scan should exit 0, got $code" >&2; exit 1; }

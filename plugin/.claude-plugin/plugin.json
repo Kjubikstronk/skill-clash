@@ -1,0 +1,10 @@
+{
+  "name": "skill-clash",
+  "description": "Find Claude Code skills that fight over the same prompts.",
+  "version": "0.1.0",
+  "author": { "name": "Kjubikstronk", "url": "https://github.com/Kjubikstronk" },
+  "homepage": "https://github.com/Kjubikstronk/skill-clash",
+  "repository": "https://github.com/Kjubikstronk/skill-clash",
+  "license": "MIT",
+  "keywords": ["skills", "diagnostics", "conflicts", "audit"]
+}

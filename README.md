@@ -2,6 +2,9 @@
 
 <img src="docs/mascot.svg" alt="Two identical blob creatures shouting the same speech bubble at each other, with a spark between them" width="380">
 
+[![CI](https://github.com/Kjubikstronk/skill-clash/actions/workflows/ci.yml/badge.svg)](https://github.com/Kjubikstronk/skill-clash/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/skill-clash)](https://www.npmjs.com/package/skill-clash)
+
 > skill-doctor tells you what's unused. skill-clash tells you why.
 
 Claude Code routes a prompt to a skill by reading each skill's `description`.
@@ -93,6 +96,21 @@ Shareable report with a collision matrix:
 ```bash
 npx skill-clash --html report.html
 ```
+
+## Use it inside Claude Code
+
+Installing it as a plugin lets you just ask, instead of remembering flags:
+
+```
+/plugin marketplace add Kjubikstronk/skill-clash
+```
+
+```
+/plugin install skill-clash
+```
+
+Then: *"which of my skills overlap?"* or *"why does the wrong skill keep
+triggering?"* The skill shells out to this same CLI and never deletes anything.
 
 ## Flags
 

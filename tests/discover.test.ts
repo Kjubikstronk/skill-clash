@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { resolve } from 'node:path';
+import { mkdtempSync, mkdirSync, writeFileSync, symlinkSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
 import { discover, searchRoots } from '../src/discover.js';
 
 const home = resolve('fixtures/home');
@@ -26,6 +28,27 @@ describe('discover', () => {
 
   it('returns nothing for a missing home and cwd', () => {
     expect(discover({ home: resolve('fixtures/nope'), cwd: resolve('fixtures/nope') })).toEqual([]);
+  });
+
+  // Regression: Dirent.isDirectory() is false for a symlinked directory, so
+  // symlinked skills (common with plugin managers and dotfiles) were invisible.
+  it('follows symlinked skill directories', () => {
+    const root = mkdtempSync(join(tmpdir(), 'skill-clash-link-'));
+    const skills = join(root, '.claude', 'skills');
+    const real = join(skills, 'real-skill');
+    mkdirSync(real, { recursive: true });
+    writeFileSync(join(real, 'SKILL.md'), '---\nname: real-skill\ndescription: Real.\n---\n');
+
+    const target = join(root, 'elsewhere', 'linked-skill');
+    mkdirSync(target, { recursive: true });
+    writeFileSync(join(target, 'SKILL.md'), '---\nname: linked-skill\ndescription: Linked.\n---\n');
+    // 'junction' works without elevation on Windows and is ignored elsewhere.
+    symlinkSync(target, join(skills, 'linked-skill'), 'junction');
+
+    const names = discover({ home: root, cwd: resolve('fixtures/nope'), plugins: false }).map((d) =>
+      norm(d.path).split('/').at(-2),
+    );
+    expect(names.sort()).toEqual(['linked-skill', 'real-skill']);
   });
 
   it('reports the roots it searches', () => {

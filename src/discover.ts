@@ -62,14 +62,29 @@ function pluginSkills(root: string, maxDepth = 8): Discovered[] {
   return out;
 }
 
+/**
+ * Subdirectory names, following symlinks.
+ * `Dirent.isDirectory()` uses lstat semantics and is false for a symlinked
+ * directory, so a symlinked skill would be invisible. Plugin managers and
+ * dotfile setups commonly symlink skills in (on Windows, as junctions), so
+ * each non-directory entry is stat'd to see what it really points at.
+ */
 function subdirs(dir: string): string[] {
   try {
     return readdirSync(dir, { withFileTypes: true })
-      .filter((e) => e.isDirectory())
+      .filter((e) => e.isDirectory() || (e.isSymbolicLink() && isDir(join(dir, e.name))))
       .map((e) => e.name)
       .sort();
   } catch {
     return [];
+  }
+}
+
+function isDir(p: string): boolean {
+  try {
+    return statSync(p).isDirectory();
+  } catch {
+    return false;
   }
 }
 

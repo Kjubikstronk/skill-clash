@@ -40,5 +40,13 @@
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vitest": "^5.0.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kjubikstronk/skill-clash.git"
+  },
+  "homepage": "https://github.com/Kjubikstronk/skill-clash#readme",
+  "bugs": {
+    "url": "https://github.com/Kjubikstronk/skill-clash/issues"
   }
 }

@@ -1,5 +1,7 @@
 # skill-clash
 
+<img src="docs/mascot.svg" alt="Two identical blob creatures shouting the same speech bubble at each other, with a spark between them" width="380">
+
 > skill-doctor tells you what's unused. skill-clash tells you why.
 
 Claude Code routes a prompt to a skill by reading each skill's `description`.
@@ -14,14 +16,16 @@ npx skill-clash
 ```
 
 ```
-skill-clash - 76 skills scanned, 14 clashes, 22 ambiguous
+skill-clash - 75 skills scanned, 13 clashes, 20 ambiguous
 
-CLASH  1.00  frontend-design (user) <-> frontend-design (plugin:frontend-design)
-             "design building" . "building ui" . "read templated defaults"
 CLASH  0.91  access (plugin:discord) <-> access (plugin:telegram)
              "the user asks to pair" . "approve someone" . "check who's allowed"
+CLASH  0.75  brainstorming <-> test-driven-development
+             "design before implementation" . "implementing any feature"
 CLASH  0.73  better-ui <-> impeccable
+             "improves ui" . "polish" . "otherwise improve a frontend interface"
 CLASH  0.60  agent-development <-> skill-development
+             "needs guidance on agent structure" . "improve skill description"
 AMBIG  0.38  impeccable <-> web-design-guidelines
              "audit" . "live browser iteration on UI elements" . "review my UI"
 ```
@@ -35,10 +39,10 @@ npx skill-clash --prompt "review my UI"
 ```
 1. 0.70  web-design-guidelines
       "review my UI"
-2. 0.50  frontend-design (plugin:frontend-design)
+2. 0.50  frontend-design
       "building ui"
-3. 0.50  frontend-design (user)
-      "building ui"
+3. 0.50  karpathy-guidelines
+      "reviewing"
 ```
 
 Let your own Claude judge the ambiguous pairs. It shells out to your `claude`
@@ -99,7 +103,7 @@ their whole description vocabulary (40%), using the overlap coefficient
 (`|A∩B| / min(|A|,|B|)`) rather than Jaccard, so a short skill subsumed by a
 long one still scores high. Scores ≥ 0.45 are a clash, ≥ 0.35 ambiguous.
 
-Those thresholds are calibrated against a real 76-skill install: 0.35 is the
+Those thresholds are calibrated against a real ~75-skill install: 0.35 is the
 tightest ambiguous value that still catches genuinely overlapping pairs, and
 it yields 36 pairs where a 0.15 threshold yields 210.
 
@@ -119,7 +123,11 @@ No model, no network, no cost — unless you pass `--deep`.
 
 - Lint frontmatter or structure → use [claudelint](https://claudelint.com/)
 - Show token cost or usage → use `/skill-doctor` in Claude Code
-- Rewrite your skills — it only tells you where they collide
+- **Remove or rewrite your skills.** It reports, you decide. A clash is not a
+  defect: plenty of overlapping pairs are ones you want to keep, and the tool
+  cannot know which half of a pair you meant to win. It prints the evidence and
+  the file paths; deleting is a one-line command you run yourself, with your
+  eyes on it.
 
 ## License
 

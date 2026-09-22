@@ -95,3 +95,19 @@ describe('run (--prompt)', () => {
     expect(t.text()).toMatch(/1\. \d\.\d\d  /);
   });
 });
+
+describe('run (--deep)', () => {
+  it('passes verdicts through to the report and never changes the exit code on failure', async () => {
+    const t = io();
+    const runClaude = async () => '[]';
+    const code = await run({ home, cwd, deep: true, runClaude, thresholds: { clash: 0.99, ambiguous: 0.1 } }, t.rio);
+    expect(code).toBe(0);
+    const t2 = io();
+    const broken = async () => {
+      throw new Error('boom');
+    };
+    const code2 = await run({ home, cwd, deep: true, runClaude: broken, thresholds: { clash: 0.99, ambiguous: 0.1 } }, t2.rio);
+    expect(code2).toBe(0);
+    expect(t2.text()).toContain('warning: --deep');
+  });
+});

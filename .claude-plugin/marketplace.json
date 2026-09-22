@@ -1,11 +1,24 @@
 {
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "skill-clash",
-  "owner": { "name": "Kjubikstronk", "url": "https://github.com/Kjubikstronk" },
+  "description": "Find Claude Code skills that fight over the same prompts.",
+  "owner": {
+    "name": "Kjubikstronk",
+    "url": "https://github.com/Kjubikstronk"
+  },
   "plugins": [
     {
       "name": "skill-clash",
+      "description": "Find Claude Code skills whose descriptions compete for the same prompts, with the shared trigger phrases shown as evidence. Reports only; never edits or deletes a skill.",
+      "author": {
+        "name": "Kjubikstronk",
+        "url": "https://github.com/Kjubikstronk"
+      },
+      "category": "development",
       "source": "./plugin",
-      "description": "Find Claude Code skills that fight over the same prompts."
+      "homepage": "https://github.com/Kjubikstronk/skill-clash",
+      "license": "MIT",
+      "keywords": ["skills", "diagnostics", "conflicts", "audit", "duplicates"]
     }
   ]
 }

@@ -135,12 +135,13 @@ words = ovl(wordsA, wordsB)
 score = 0.6 * exact + 0.4 * words
 ```
 
-Bands (defaults, overridable via `--clash <n>` and `--ambiguous <n>`; the
-defaults are calibrated against the author's real skill set in the plan's
-calibration task and may move):
+Bands (defaults, overridable via `--clash <n>` and `--ambiguous <n>`;
+calibrated 2026-09-22 against a real 76-skill install — 0.35 is the tightest
+ambiguous value that still reports impeccable <-> web-design-guidelines at
+0.38, and it yields 36 pairs where the initial 0.15 estimate yielded 210):
 
 - `score ≥ 0.45` → `clash`
-- `0.15 ≤ score < 0.45` → `ambiguous`
+- `0.35 ≤ score < 0.45` → `ambiguous`
 - otherwise → `none` (dropped from output)
 
 `evidence` = original text of every trigger (from either skill, up to 6) that

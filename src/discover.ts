@@ -38,7 +38,10 @@ export function discover(opts: DiscoverOptions = {}): Discovered[] {
   const seen = new Set<string>();
   const out: Discovered[] = [];
   for (const d of found) {
-    const key = realOrSelf(d.path).toLowerCase();
+    // Case-fold only where the filesystem does. On Linux, `Foo/SKILL.md` and
+    // `foo/SKILL.md` are two different skills and must not collapse into one.
+    const real = realOrSelf(d.path);
+    const key = process.platform === 'win32' || process.platform === 'darwin' ? real.toLowerCase() : real;
     if (seen.has(key)) continue;
     seen.add(key);
     out.push(d);

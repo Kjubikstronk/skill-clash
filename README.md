@@ -104,6 +104,7 @@ npx skill-clash --html report.html
 | `--json` | Machine-readable output |
 | `--html <file>` | Also write a standalone HTML report |
 | `--strict` | Exit 1 on ambiguous pairs too |
+| `--limit <n>` | Max pairs to report, `0` for all (default 50) |
 | `--clash <n>`, `--ambiguous <n>` | Band thresholds (0–1) |
 | `--no-plugins` | Skip skills shipped by plugins |
 | `--home <dir>`, `--cwd <dir>` | Scan somewhere else |

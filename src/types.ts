@@ -56,6 +56,9 @@ export interface Thresholds {
   ambiguous: number;
 }
 
+/** Max pairs shown by default; --limit 0 lifts it. */
+export const DEFAULT_LIMIT = 50;
+
 /**
  * Calibrated against a real 76-skill install.
  * `ambiguous` is the tightest value that still reports the

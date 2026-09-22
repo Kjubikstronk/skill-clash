@@ -7,7 +7,7 @@ import { explainPair, resolveSkill } from './explain.js';
 import { deepen, runClaudeCli, type RunClaude } from './deep.js';
 import { renderScan, renderMatch, renderJson, renderExplain, type ScanReport, type MatchReport } from './report.js';
 import { renderHtml } from './html.js';
-import { DEFAULT_THRESHOLDS, type Skill, type Skipped, type Thresholds, type TriggerSet } from './types.js';
+import { DEFAULT_LIMIT, DEFAULT_THRESHOLDS, type Skill, type Skipped, type Thresholds, type TriggerSet } from './types.js';
 
 export interface RunOptions {
   home?: string;
@@ -20,6 +20,8 @@ export interface RunOptions {
   json?: boolean;
   html?: string;
   strict?: boolean;
+  /** Max pairs to report. 0 means no limit. Default DEFAULT_LIMIT. */
+  limit?: number;
   thresholds?: Thresholds;
   /** Injected in tests; defaults to spawning `claude -p`. */
   runClaude?: RunClaude;
@@ -86,22 +88,35 @@ export async function run(opts: RunOptions, io: RunIO): Promise<number> {
     return 0;
   }
 
-  let clashes = findClashes(sets, th);
+  const allClashes = findClashes(sets, th);
+  // Cap output: a large or heavily-overlapping skill set can produce hundreds
+  // of thousands of pairs (1000 skills = 499,500), which would flood a
+  // terminal and make the HTML matrix unrenderable.
+  const limit = opts.limit ?? DEFAULT_LIMIT;
+  let clashes = limit > 0 ? allClashes.slice(0, limit) : allClashes;
   if (opts.deep) clashes = await deepen(clashes, byLabel, opts.runClaude ?? runClaudeCli, (w) => warnings.push(w));
 
   const report: ScanReport = {
     scanned: skills.length,
     clashes,
+    totalClashes: allClashes.length,
     skipped,
     untriggered: sets.filter((s) => s.triggers.length === 0).map((s) => s.skill),
     warnings,
   };
   if (opts.html) {
-    io.writeFile(opts.html, renderHtml(report));
-    io.err(`HTML report written to ${opts.html}`);
+    // A failed side-output must not destroy the primary report.
+    try {
+      io.writeFile(opts.html, renderHtml(report));
+      io.err(`HTML report written to ${opts.html}`);
+    } catch (e) {
+      warnings.push(`--html: could not write ${opts.html} (${(e as Error).message})`);
+      report.warnings = warnings;
+    }
   }
   io.out(opts.json ? renderJson(report) : renderScan(report));
 
-  const failing = clashes.some((c) => c.band === 'clash' || (opts.strict === true && c.band === 'ambiguous'));
+  // Exit code reflects everything found, not just the visible slice.
+  const failing = allClashes.some((c) => c.band === 'clash' || (opts.strict === true && c.band === 'ambiguous'));
   return failing ? 1 : 0;
 }

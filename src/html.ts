@@ -20,6 +20,12 @@ li.clash .badge{background:var(--clash);color:var(--clash-fg)}li.ambiguous .badg
 .empty{background:var(--ok);padding:12px;border-radius:8px}.muted{color:var(--muted);font-size:13px}
 `;
 
+/** Says so when --limit hid pairs, so a shared report is not read as complete. */
+function truncNote(r: ScanReport): string {
+  const total = r.totalClashes ?? r.clashes.length;
+  return total > r.clashes.length ? ` &middot; showing top ${r.clashes.length} of ${total}` : '';
+}
+
 export function renderHtml(r: ScanReport): string {
   const names = [...new Set(r.clashes.flatMap((c) => [c.a, c.b]))].sort((x, y) => x.localeCompare(y));
   const idx = new Map(names.map((n, i) => [n, i + 1]));
@@ -69,7 +75,7 @@ ${names
 <title>skill-clash report</title><style>${CSS}</style></head>
 <body>
 <h1>skill-clash</h1>
-<p class="sub">${r.scanned} skills scanned &middot; ${nClash} clash${nClash === 1 ? '' : 'es'} &middot; ${r.clashes.length - nClash} ambiguous</p>
+<p class="sub">${r.scanned} skills scanned &middot; ${nClash} clash${nClash === 1 ? '' : 'es'} &middot; ${r.clashes.length - nClash} ambiguous${truncNote(r)}</p>
 ${matrix}
 <ul>
 ${list}

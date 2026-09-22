@@ -3,9 +3,15 @@ import { writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { Command, CommanderError, InvalidArgumentError } from 'commander';
 import { run } from './pipeline.js';
-import { DEFAULT_THRESHOLDS } from './types.js';
+import { DEFAULT_LIMIT, DEFAULT_THRESHOLDS } from './types.js';
 
 const { version } = createRequire(import.meta.url)('../package.json') as { version: string };
+
+const count = (v: string): number => {
+  const n = Number(v);
+  if (!Number.isInteger(n) || n < 0) throw new InvalidArgumentError('must be a whole number >= 0');
+  return n;
+};
 
 const unit = (v: string): number => {
   const n = Number(v);
@@ -23,6 +29,7 @@ const program = new Command()
   .option('--json', 'machine-readable output', false)
   .option('--html <file>', 'also write a standalone HTML report')
   .option('--strict', 'exit 1 on ambiguous pairs too', false)
+  .option('--limit <n>', `max pairs to report, 0 for all (default ${DEFAULT_LIMIT})`, count)
   .option('--clash <n>', `clash threshold (default ${DEFAULT_THRESHOLDS.clash})`, unit)
   .option('--ambiguous <n>', `ambiguous threshold (default ${DEFAULT_THRESHOLDS.ambiguous})`, unit)
   .option('--no-plugins', 'skip skills shipped by plugins')
@@ -38,6 +45,7 @@ interface Opts {
   json: boolean;
   html?: string;
   strict: boolean;
+  limit?: number;
   clash?: number;
   ambiguous?: number;
   plugins: boolean;
@@ -86,6 +94,7 @@ async function main(): Promise<number> {
         json: opts.json,
         html: opts.html,
         strict: opts.strict,
+        limit: opts.limit,
         thresholds,
       },
       {

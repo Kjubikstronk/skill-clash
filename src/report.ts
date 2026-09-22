@@ -4,7 +4,10 @@ import type { Clash, MatchResult, Skipped } from './types.js';
 
 export interface ScanReport {
   scanned: number;
+  /** Possibly truncated by --limit; totalClashes has the real count. */
   clashes: Clash[];
+  /** Pairs found before --limit was applied. Defaults to clashes.length. */
+  totalClashes?: number;
   skipped: Skipped[];
   untriggered: string[];
   warnings: string[];
@@ -22,10 +25,12 @@ const INDENT = '             ';
 const quoteList = (items: string[]): string => items.map((e) => `"${e}"`).join(' . ');
 
 export function renderScan(r: ScanReport): string {
+  const total = r.totalClashes ?? r.clashes.length;
   const nClash = r.clashes.filter((c) => c.band === 'clash').length;
   const nAmb = r.clashes.length - nClash;
+  const shown = total > r.clashes.length ? pc.dim(` (showing top ${r.clashes.length} of ${total})`) : '';
   const lines: string[] = [
-    `${pc.bold('skill-clash')} - ${r.scanned} skills scanned, ${pc.red(`${nClash} clash${nClash === 1 ? '' : 'es'}`)}, ${pc.yellow(`${nAmb} ambiguous`)}`,
+    `${pc.bold('skill-clash')} - ${r.scanned} skills scanned, ${pc.red(`${nClash} clash${nClash === 1 ? '' : 'es'}`)}, ${pc.yellow(`${nAmb} ambiguous`)}${shown}`,
     '',
   ];
   if (r.clashes.length === 0) lines.push(pc.green('No overlapping skills found.'));
@@ -37,6 +42,9 @@ export function renderScan(r: ScanReport): string {
       const v = c.verdict === 'clash' ? pc.red('deep: clash') : pc.green('deep: distinct');
       lines.push(INDENT + v + (c.reason ? pc.dim(` - ${c.reason}`) : ''));
     }
+  }
+  if (total > r.clashes.length) {
+    lines.push('', pc.dim(`${total - r.clashes.length} more pairs hidden. Use --limit 0 to see all, or --json.`));
   }
   return [...lines, ...footer(r.skipped, r.warnings, r.untriggered)].join('\n');
 }

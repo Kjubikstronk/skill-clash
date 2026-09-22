@@ -124,3 +124,38 @@ describe('default thresholds (calibrated against a real 76-skill install)', () =
     expect(keys).not.toContain('git-commit|threejs-shaders');
   });
 });
+
+describe('output limit', () => {
+  it('caps reported pairs, states the real total, and keeps the exit code honest', async () => {
+    const t = io();
+    const code = await run({ home, cwd, limit: 1, thresholds: { clash: 0.2, ambiguous: 0.05 }, json: true }, t.rio);
+    const parsed = JSON.parse(t.out.join('\n'));
+    expect(parsed.clashes).toHaveLength(1);
+    expect(parsed.totalClashes).toBeGreaterThan(1);
+    // exit code must reflect ALL findings, not just the visible slice
+    expect(code).toBe(1);
+  });
+
+  it('limit 0 means no limit', async () => {
+    const t = io();
+    await run({ home, cwd, limit: 0, thresholds: { clash: 0.2, ambiguous: 0.05 }, json: true }, t.rio);
+    const parsed = JSON.parse(t.out.join('\n'));
+    expect(parsed.clashes).toHaveLength(parsed.totalClashes);
+  });
+
+  it('says how many pairs were hidden in terminal output', async () => {
+    const t = io();
+    await run({ home, cwd, limit: 1, thresholds: { clash: 0.2, ambiguous: 0.05 } }, t.rio);
+    expect(t.text()).toContain('showing top 1 of');
+    expect(t.text()).toMatch(/more pairs hidden/);
+  });
+
+  it('a failed --html write warns instead of destroying the report', async () => {
+    const t = io();
+    const rio = { ...t.rio, writeFile: () => { throw new Error('EACCES'); } };
+    const code = await run({ home, cwd, html: 'x.html' }, rio);
+    expect(code).toBe(0);
+    expect(t.text()).toContain('warning: --html: could not write');
+    expect(t.text()).toContain('skills scanned');
+  });
+});

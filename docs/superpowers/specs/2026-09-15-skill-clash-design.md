@@ -228,8 +228,18 @@ Rule: **never crash on someone else's files.**
 
 1. `npx skill-clash` on the author's machine reports the UI-review clash with
    correct evidence.
-2. `skill-clash --prompt "review my UI"` ranks `web-design-guidelines` and
-   `impeccable` in its top 3.
+2. `skill-clash --prompt "review my UI"` ranks `web-design-guidelines` first.
+
+   *Amended 2026-09-22 after calibration.* This originally also required
+   `impeccable` in the top 3. On a real install it ranks 6th (0.40), matching
+   only on description vocabulary with zero trigger hits: its 20 declared
+   triggers are `design`, `audit`, `polish`, `shape`, none of which is "review"
+   or "UI". That is correct for a tool that ranks by *declared* triggers --
+   `web-design-guidelines` states `"review my UI"` verbatim and wins at 0.70.
+   The original criterion assumed topical similarity should rank highly; the
+   tool deliberately measures trigger claims instead. Note pair mode still
+   reports these two as ambiguous (0.38), which is the intended place for
+   "these two overlap" to surface.
 3. `skill-clash --html report.html` produces a file worth screenshotting.
 4. `--deep` works against a real `claude` install and degrades gracefully without one.
 5. Tests green; published to npm.

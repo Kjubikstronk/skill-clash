@@ -56,4 +56,10 @@ export interface Thresholds {
   ambiguous: number;
 }
 
-export const DEFAULT_THRESHOLDS: Thresholds = { clash: 0.45, ambiguous: 0.15 };
+/**
+ * Calibrated against a real 76-skill install.
+ * `ambiguous` is the tightest value that still reports the
+ * impeccable <-> web-design-guidelines pair (0.38); 0.40 would drop it.
+ * Lower values get noisy fast: 0.15 reports 210 pairs, 0.35 reports 36.
+ */
+export const DEFAULT_THRESHOLDS: Thresholds = { clash: 0.45, ambiguous: 0.35 };

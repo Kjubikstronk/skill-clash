@@ -111,3 +111,16 @@ describe('run (--deep)', () => {
     expect(t2.text()).toContain('warning: --deep');
   });
 });
+
+describe('default thresholds (calibrated against a real 76-skill install)', () => {
+  it('flag the UI pairs and stay silent on unrelated ones', async () => {
+    const t = io();
+    await run({ home, cwd, json: true }, t.rio);
+    const parsed = JSON.parse(t.out.join('\n'));
+    const key = (c: { a: string; b: string }) => [c.a, c.b].sort().join('|');
+    const keys = parsed.clashes.map(key);
+    expect(keys).toContain('impeccable|web-design-guidelines');
+    expect(keys).toContain('accessibility-a11y|web-design-guidelines');
+    expect(keys).not.toContain('git-commit|threejs-shaders');
+  });
+});

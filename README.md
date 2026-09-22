@@ -45,6 +45,35 @@ npx skill-clash --prompt "review my UI"
       "reviewing"
 ```
 
+Found a pair you need to decide about? `--explain` prints everything you need
+to choose, and changes nothing:
+
+```bash
+npx skill-clash --explain better-ui impeccable
+```
+
+```
+skill-clash - better-ui <-> impeccable  CLASH 0.73
+
+Overlapping on:
+  polishes, improves, ui
+
+better-ui (user)
+  ~/.claude/skills/better-ui/SKILL.md
+  Polishes and improves the UI in your project. Covers concentric border
+  radius, optical alignment, surface depth, contextual icons, hit areas.
+  claims: "polishes improves" . "improves ui"
+  only it: concentric, radius, optical, hit, areas
+
+impeccable (user)
+  ~/.claude/skills/impeccable/SKILL.md
+  Use when the user wants to design, redesign, shape, critique, audit ...
+  claims: "otherwise improve a frontend interface"
+  only it: redesign, critique, distill, harden, colorize
+
+Nothing was changed. To drop one, remove its directory yourself.
+```
+
 Let your own Claude judge the ambiguous pairs. It shells out to your `claude`
 CLI — no API key, no account setup — and sends only the name and description
 of each ambiguous pair, roughly 150 tokens per pair, nothing else:
@@ -70,6 +99,7 @@ npx skill-clash --html report.html
 | Flag | Effect |
 |---|---|
 | `-p, --prompt <text>` | Rank skills competing for this prompt |
+| `-e, --explain <a> <b>` | Show in detail why two named skills overlap |
 | `--deep` | Ask `claude -p` for a verdict on ambiguous pairs |
 | `--json` | Machine-readable output |
 | `--html <file>` | Also write a standalone HTML report |
